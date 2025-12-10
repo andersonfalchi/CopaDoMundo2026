@@ -20,11 +20,10 @@ namespace CopaDoMundo2026.Api
                     services.AddApplicationInsightsTelemetryWorkerService();
                     services.ConfigureFunctionsApplicationInsights();
 
-                    var connectionString = Environment.GetEnvironmentVariable("SqlConnectionString")
-                        ?? "Server=localhost;Database=MeuProjetoDB;User Id=sa;Password=123;TrustServerCertificate=True;";
+                    var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
 
                     services.AddDbContext<AppDbContext>(options =>
-                        options.UseSqlServer(connectionString));
+                        options.UseNpgsql(connectionString));
 
                     services.AddScoped<AutenticacaoService>();
                 })
