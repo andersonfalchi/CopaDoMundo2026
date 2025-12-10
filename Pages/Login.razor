@@ -1,6 +1,9 @@
 @page "/login"
+@using CopaDoMundo2026.Services
 @using CopaMundo2026.Models
 
+@inject AuthApiClient Api
+@inject CustomAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
@@ -128,7 +131,7 @@
 
         try
         {
-            // var (sucesso, mensagem, usuario) = await AuthService.LoginAsync(loginModel);
+            var (sucesso, mensagem, usuario) = await Api.LoginAsync(loginModel);
 
             await JS.InvokeVoidAsync("playVideo", videoElement);
             StateHasChanged();
@@ -140,16 +143,16 @@
 
             await Task.Delay(3000);
 
-            // if (!sucesso)
-            // {
-            //     loginSucesso = false;
-            //     mensagemErro = mensagem;
-            //     StateHasChanged();
-            // }
-            // else 
-            // { 
-            //     Navigation.NavigateTo("/"); 
-            // }
+            if (!sucesso)
+            {
+                loginSucesso = false;
+                mensagemErro = mensagem;
+                StateHasChanged();
+            }
+            else 
+            { 
+                Navigation.NavigateTo("/"); 
+            }
         }
         catch (Exception ex)
         {

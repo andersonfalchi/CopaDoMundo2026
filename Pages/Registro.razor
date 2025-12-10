@@ -1,6 +1,10 @@
+@page "/"
 @page "/registro"
+@using CopaDoMundo2026.Services
 @using CopaMundo2026.Models
 
+@inject AuthApiClient Api
+@inject CustomAuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -164,18 +168,18 @@
 
         try
         {
-            // var (sucesso, mensagem) = await AuthService.RegistrarAsync(registroModel);
+            var (sucesso, mensagem) = await Api.RegisterAsync(registroModel);
 
-            // if (sucesso)
-            // {
-            //     mensagemSucesso = mensagem;
-            //     await Task.Delay(2000);
-            //     Navigation.NavigateTo("/login");
-            // }
-            // else
-            // {
-            //     mensagemErro = mensagem;
-            // }
+            if (sucesso)
+            {
+                mensagemSucesso = mensagem;
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                mensagemErro = mensagem;
+            }
         }
         finally
         {
