@@ -1,0 +1,44 @@
+name: Deploy Azure Functions
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'CopaDoMundo2026.Api/**'  # AJUSTE: caminho da sua pasta do backend
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_NAME: 'CopaMundoApi '  # MUDE AQUI
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: './CopaDoMundo2026.Api'  # AJUSTE: caminho do projeto
+  DOTNET_VERSION: '9.0.x'  # AJUSTE: sua versão (.NET 6, 7 ou 8)
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Restore dependencies
+      run: dotnet restore
+      working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+    
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+      working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+    
+    - name: Publish
+      run: dotnet publish --configuration Release --output ./output
+      working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+    
+    - name: Deploy to Azure Functions
+      uses: Azure/functions-action@v1
+      with:
+        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+        package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
