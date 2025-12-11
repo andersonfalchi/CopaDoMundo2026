@@ -1,3 +1,4 @@
+using CopaDoMundo2026.Api.Middlewares;
 using CopaMundo2026.Context;
 using CopaMundo2026.Services;
 using Microsoft.Azure.Functions.Worker;
@@ -14,7 +15,10 @@ namespace CopaDoMundo2026.Api
         static void Main(string[] args)
         {
             var host = new HostBuilder()
-                .ConfigureFunctionsWebApplication()
+                .ConfigureFunctionsWebApplication(builder =>
+                {
+                    builder.UseMiddleware<ExceptionHandlingMiddleware>();
+                })
                 .ConfigureServices(services =>
                 {
                     services.AddApplicationInsightsTelemetryWorkerService();
