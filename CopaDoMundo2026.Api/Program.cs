@@ -1,3 +1,4 @@
+﻿using CopaDoMundo2026.Api.Middlewares;
 using CopaMundo2026.Context;
 using CopaMundo2026.Services;
 using Microsoft.Azure.Functions.Worker;
@@ -14,20 +15,23 @@ namespace CopaDoMundo2026.Api
         static void Main(string[] args)
         {
             var host = new HostBuilder()
-                .ConfigureFunctionsWebApplication()
-                .ConfigureServices(services =>
-                {
-                    services.AddApplicationInsightsTelemetryWorkerService();
-                    services.ConfigureFunctionsApplicationInsights();
+    .ConfigureFunctionsWebApplication(builder =>
+    {
+        builder.UseMiddleware<CorsMiddleware>();
+        builder.UseMiddleware<ExceptionHandlingMiddleware>();
+    })
+    .ConfigureServices(services =>
+    {
+        services.AddApplicationInsightsTelemetryWorkerService();
+        services.ConfigureFunctionsApplicationInsights();
 
-                    var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+        var connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(connectionString));
 
-                    services.AddDbContext<AppDbContext>(options =>
-                        options.UseNpgsql(connectionString));
-
-                    services.AddScoped<AutenticacaoService>();
-                })
-                .Build();
+        services.AddScoped<AutenticacaoService>();
+    })
+    .Build();
 
             host.Run();
         }
