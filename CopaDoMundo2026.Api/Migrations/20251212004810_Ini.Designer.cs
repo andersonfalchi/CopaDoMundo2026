@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CopaDoMundo2026.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251210225458_Ini")]
+    [Migration("20251212004810_Ini")]
     partial class Ini
     {
         /// <inheritdoc />
@@ -44,6 +44,9 @@ namespace CopaDoMundo2026.Api.Migrations
                     b.Property<string>("SenhaHash")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime>("UltimoAcesso")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
