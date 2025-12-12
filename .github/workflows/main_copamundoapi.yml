@@ -53,9 +53,11 @@ jobs:
         with:
           app-name: 'CopaMundoApi'
           slot-name: 'Production'
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
 
           
+
 
 
 
