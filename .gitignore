@@ -471,6 +471,8 @@ test-results/
 # Icon must end with two \r
 Icon
 
+local.settings.json
+
 
 # Thumbnails
 ._*
