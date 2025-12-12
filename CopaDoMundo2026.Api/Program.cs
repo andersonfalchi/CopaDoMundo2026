@@ -25,7 +25,7 @@ namespace CopaDoMundo2026.Api
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
 
-        var connectionString = Environment.GetEnvironmentVariable("SupabaseUrl");
+        var connectionString = Environment.GetEnvironmentVariable("DatabaseConnection");
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
