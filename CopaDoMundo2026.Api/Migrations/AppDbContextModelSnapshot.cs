@@ -42,6 +42,9 @@ namespace CopaDoMundo2026.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("UltimoAcesso")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NomeUsuario")

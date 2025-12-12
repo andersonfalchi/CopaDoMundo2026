@@ -20,7 +20,8 @@ namespace CopaDoMundo2026.Api.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     NomeUsuario = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     SenhaHash = table.Column<string>(type: "text", nullable: false),
-                    DataCriacao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    DataCriacao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UltimoAcesso = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
