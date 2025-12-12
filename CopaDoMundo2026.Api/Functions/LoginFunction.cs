@@ -1,6 +1,4 @@
-﻿using CopaDoMundo2026.Api.Exceptions;
-using CopaDoMundo2026.Api.Models;
-using CopaMundo2026.Models;
+﻿using CopaMundo2026.Models;
 using CopaMundo2026.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -27,41 +25,34 @@ namespace CopaDoMundo2026.Api.Functions
 
         [Function("Login")]
         public async Task<HttpResponseData> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "login")]
-        HttpRequestData req)
+          [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "login")] HttpRequestData req)
         {
             _logger.LogInformation("Processando requisição de login");
 
             var loginDto = await req.ReadFromJsonAsync<LoginDTO>();
             if (loginDto == null)
             {
-                throw new ValidationException("login", "Dados de login são obrigatórios");
+                var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+                await bad.WriteStringAsync("Dados de login inválidos");
+                return bad;
             }
 
-            if (string.IsNullOrWhiteSpace(loginDto.Usuario))
-            {
-                throw new ValidationException("nomeUsuario", "Nome de usuário é obrigatório");
-            }
+            var (sucesso, mensagem, usuario) = await _auth.LoginAsync(loginDto);
 
-            if (string.IsNullOrWhiteSpace(loginDto.Senha))
-            {
-                throw new ValidationException("senha", "Senha é obrigatória");
-            }
+            var response = req.CreateResponse(sucesso ? HttpStatusCode.OK : HttpStatusCode.BadRequest);
 
-            var usuario = await _auth.LoginAsync(loginDto);
-
-            var usuarioSafe = new
+            var usuarioSafe = usuario == null ? null : new
             {
                 Id = usuario.Id,
-                NomeUsuario = usuario.NomeUsuario
+                NomeUsuario = usuario.NomeUsuario,
             };
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(ApiResponse<object>.SuccessResponse(new
+            await response.WriteAsJsonAsync(new
             {
-                mensagem = $"⚽ Gooool! Bem-vindo de volta, {usuario.NomeUsuario}!",
+                sucesso,
+                mensagem,
                 usuario = usuarioSafe
-            }));
+            });
 
             return response;
         }

@@ -18,7 +18,6 @@ namespace CopaDoMundo2026.Api
     .ConfigureFunctionsWebApplication(builder =>
     {
         builder.UseMiddleware<CorsMiddleware>();
-        builder.UseMiddleware<ExceptionHandlingMiddleware>();
     })
     .ConfigureServices(services =>
     {

@@ -1,6 +1,4 @@
-﻿using CopaDoMundo2026.Api.Exceptions;
-using CopaDoMundo2026.Api.Models;
-using CopaMundo2026.Models;
+﻿using CopaMundo2026.Models;
 using CopaMundo2026.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -27,45 +25,23 @@ namespace CopaDoMundo2026.Api.Functions
 
         [Function("Registrar")]
         public async Task<HttpResponseData> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "registrar")]
-        HttpRequestData req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "registrar")] HttpRequestData req)
         {
             _logger.LogInformation("Processando requisição de registro");
+
 
             var registro = await req.ReadFromJsonAsync<RegistroDTO>();
             if (registro == null)
             {
-                throw new ValidationException("registro", "Dados de registro são obrigatórios");
+                var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+                await bad.WriteStringAsync("Dados inválidos");
+                return bad;
             }
 
-            if (string.IsNullOrWhiteSpace(registro.NomeUsuario))
-            {
-                throw new ValidationException("nomeUsuario", "Nome de usuário é obrigatório");
-            }
+            var (sucesso, mensagem) = await _auth.RegistrarAsync(registro);
 
-            if (string.IsNullOrWhiteSpace(registro.Senha))
-            {
-                throw new ValidationException("senha", "Senha é obrigatória");
-            }
-
-            if (registro.Senha.Length < 6)
-            {
-                throw new ValidationException("senha", "Senha deve ter no mínimo 6 caracteres");
-            }
-
-            var usuario = await _auth.RegistrarAsync(registro);
-
-            var response = req.CreateResponse(HttpStatusCode.Created);
-            await response.WriteAsJsonAsync(ApiResponse<object>.SuccessResponse(new
-            {
-                mensagem = "🎉 Cadastro realizado com sucesso! Bem-vindo ao time!",
-                usuario = new
-                {
-                    Id = usuario.Id,
-                    NomeUsuario = usuario.NomeUsuario
-                }
-            }));
-
+            var response = req.CreateResponse(sucesso ? HttpStatusCode.Created : HttpStatusCode.BadRequest);
+            await response.WriteAsJsonAsync(new { sucesso, mensagem });
             return response;
         }
     }
