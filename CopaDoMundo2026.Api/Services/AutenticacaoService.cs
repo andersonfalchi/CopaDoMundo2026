@@ -1,3 +1,4 @@
+using CopaDoMundo2026.Api.Exceptions;
 using CopaMundo2026.Context;
 using CopaMundo2026.Models;
 using Microsoft.EntityFrameworkCore;
@@ -17,31 +18,105 @@ public class AutenticacaoService
         _db = db ?? throw new ArgumentNullException(nameof(db));
     }
 
-    public async Task<(bool sucesso, string mensagem)> RegistrarAsync(RegistroDTO registro)
+    public async Task<Usuario> RegistrarAsync(RegistroDTO registro)
     {
-        var existe = await _db.Usuarios.AnyAsync(u => u.NomeUsuario.ToLower() == registro.NomeUsuario.ToLower());
-        if (existe) return (false, "⚽ Este usuário já está em campo! Escolha outro.");
-
-        var usuario = new Usuario
+        try
         {
-            NomeUsuario = registro.NomeUsuario,
-            SenhaHash = HashSenha(registro.Senha),
-            DataCriacao = DateTime.UtcNow
-        };
+            var existe = await _db.Usuarios
+                .AnyAsync(u => u.NomeUsuario.ToLower() == registro.NomeUsuario.ToLower());
 
-        _db.Usuarios.Add(usuario);
-        await _db.SaveChangesAsync();
+            if (existe)
+            {
+                throw new BusinessException(
+                    "⚽ Este usuário já está em campo! Escolha outro.",
+                    "USUARIO_JA_EXISTE"
+                );
+            }
 
-        return (true, "🎉 Cadastro realizado com sucesso! Bem-vindo ao time!");
+            var usuario = new Usuario
+            {
+                NomeUsuario = registro.NomeUsuario,
+                SenhaHash = HashSenha(registro.Senha),
+                DataCriacao = DateTime.UtcNow
+            };
+
+            _db.Usuarios.Add(usuario);
+            await _db.SaveChangesAsync();
+
+            return usuario;
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new DatabaseException(
+                "Erro ao salvar usuário no banco de dados. Tente novamente."
+            );
+        }
     }
 
-    public async Task<(bool sucesso, string mensagem, Usuario? usuario)> LoginAsync(LoginDTO login)
+    public async Task<Usuario> LoginAsync(LoginDTO login)
     {
-        var usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.NomeUsuario.ToLower() == login.Usuario.ToLower());
-        if (usuario == null) return (false, "❌ Usuário não encontrado!", null);
-        if (usuario.SenhaHash != HashSenha(login.Senha)) return (false, "❌ Senha incorreta! Tente novamente.", null);
+        try
+        {
+            var usuario = await _db.Usuarios
+                .FirstOrDefaultAsync(u => u.NomeUsuario.ToLower() == login.Usuario.ToLower());
 
-        return (true, $"⚽ Gooool! Bem-vindo de volta, {usuario.NomeUsuario}!", usuario);
+            if (usuario == null)
+            {
+                throw new BusinessException(
+                    "❌ Usuário não encontrado!",
+                    "USUARIO_NAO_ENCONTRADO"
+                );
+            }
+
+            if (usuario.SenhaHash != HashSenha(login.Senha))
+            {
+                throw new BusinessException(
+                    "❌ Senha incorreta! Tente novamente.",
+                    "SENHA_INCORRETA"
+                );
+            }
+
+            usuario.UltimoAcesso = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return usuario;
+        }
+        catch (BusinessException)
+        {
+            // Re-lança BusinessException sem modificar
+            throw;
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new DatabaseException(
+                "Erro ao acessar banco de dados durante login."
+            );
+        }
+    }
+
+    public async Task<Usuario> BuscarPorIdAsync(int id)
+    {
+        var usuario = await _db.Usuarios.FindAsync(id);
+
+        if (usuario == null)
+        {
+            throw new NotFoundException("Usuário", id);
+        }
+
+        return usuario;
+    }
+
+    public async Task<Usuario> BuscarPorNomeUsuarioAsync(string nomeUsuario)
+    {
+        var usuario = await _db.Usuarios
+            .FirstOrDefaultAsync(u => u.NomeUsuario.ToLower() == nomeUsuario.ToLower());
+
+        if (usuario == null)
+        {
+            throw new NotFoundException($"Usuário '{nomeUsuario}' não encontrado");
+        }
+
+        return usuario;
     }
 
     private string HashSenha(string senha)

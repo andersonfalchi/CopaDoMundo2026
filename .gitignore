@@ -6,6 +6,34 @@
 # dotenv files
 .env
 
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nuget.props
+*.nuget.targets
+project.assets.json
+project.nuget.cache
+*.snupkg
+
+# Build cache
+*.cache
+
+# Auto-generated files
+**/[Gg]lobalUsings.g.cs
+**/AssemblyInfo.cs
+*.AssemblyInfo.cs
+
 # User-specific files
 *.rsuser
 *.suo
@@ -53,8 +81,10 @@ TestResult.xml
 nunit-*.xml
 
 # Build Results of an ATL Project
-[Dd]ebugPS/
-[Rr]eleasePS/
+**/Debug/
+**/Release/
+**/bin/
+**/obj/
 dlldata.c
 
 # Benchmark Results
@@ -211,6 +241,12 @@ PublishScripts/
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
+project.assets.json
+project.nuget.cache
+
+# Cache files
+*.cache
+
 
 # Microsoft Azure Build Output
 csx/
@@ -479,6 +515,10 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Auto-generated files
+*AssemblyInfo.cs
+GlobalUsings.g.cs
 
 # Vim temporary swap files
 *.swp
