@@ -48,8 +48,9 @@ public class AutenticacaoService
         catch (DbUpdateException ex)
         {
             throw new DatabaseException(
-                "Erro ao salvar usuário no banco de dados. Tente novamente."
-            );
+               "Erro ao salvar usuário no banco de dados. Tente novamente.",
+               ex
+           );
         }
     }
 

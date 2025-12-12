@@ -8,8 +8,8 @@ namespace CopaDoMundo2026.Api.Exceptions
 {
     public class DatabaseException : BaseException
     {
-        public DatabaseException(string message)
-            : base(message, 500, "DATABASE_ERROR")
+        public DatabaseException(string message, Exception inner = null)
+            : base(message, 500, "DATABASE_ERROR", inner)
         {
         }
     }

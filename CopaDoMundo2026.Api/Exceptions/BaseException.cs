@@ -11,8 +11,8 @@ namespace CopaDoMundo2026.Api.Exceptions
         public int StatusCode { get; }
         public string ErrorCode { get; }
 
-        protected BaseException(string message, int statusCode, string errorCode)
-            : base(message)
+        protected BaseException(string message, int statusCode, string errorCode, Exception inner = null)
+            : base(message, inner)
         {
             StatusCode = statusCode;
             ErrorCode = errorCode;

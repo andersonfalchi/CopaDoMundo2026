@@ -115,12 +115,8 @@ namespace CopaDoMundo2026.Api.Middlewares
             }
             else
             {
-                _logger.LogError(
-                    exception,
-                    "[{FunctionName}] Erro não tratado: {Message}",
-                    functionName,
-                    exception.Message
-                );
+                _logger.LogError(exception, "[{FunctionName}] Erro não tratado: {Message} | Exception: {ExceptionString}",
+                    functionName, exception.Message, exception.ToString());
             }
         }
     }
