@@ -10,7 +10,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri(builder.Configuration["ApiUrl/"] ?? "http://localhost:7071/")
+    BaseAddress = new Uri(builder.Configuration["ApiUrl/"] ?? "https://copamundoapi-fvf0e2cahxbtbwb3.brazilsouth-01.azurewebsites.net/")
 });
 
 builder.Services.AddScoped<AuthApiClient>();

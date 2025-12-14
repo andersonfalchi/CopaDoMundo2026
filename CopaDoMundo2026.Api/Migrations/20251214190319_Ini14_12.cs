@@ -7,31 +7,32 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CopaDoMundo2026.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class Ini : Migration
+    public partial class Ini14_12 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Jogo",
+                name: "Jogos",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    DataHora = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    Fase = table.Column<short>(type: "smallint", nullable: false),
+                    Rodada = table.Column<string>(type: "text", nullable: false),
+                    Grupo = table.Column<string>(type: "text", nullable: false),
                     Estadio = table.Column<string>(type: "text", nullable: false),
+                    DataHora = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     SelecaoA = table.Column<string>(type: "text", nullable: false),
                     BandeiraSelecaoA = table.Column<string>(type: "text", nullable: false),
                     SelecaoB = table.Column<string>(type: "text", nullable: false),
                     BandeiraSelecaoB = table.Column<string>(type: "text", nullable: false),
-                    Rodada = table.Column<string>(type: "text", nullable: false),
-                    Fase = table.Column<string>(type: "text", nullable: false),
                     QtdGolsSelecaoA = table.Column<int>(type: "integer", nullable: true),
                     QtdGolsSelecaoB = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Jogo", x => x.Id);
+                    table.PrimaryKey("PK_Jogos", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -52,7 +53,7 @@ namespace CopaDoMundo2026.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Palpite",
+                name: "Palpites",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -64,15 +65,15 @@ namespace CopaDoMundo2026.Api.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Palpite", x => x.Id);
+                    table.PrimaryKey("PK_Palpites", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Palpite_Jogo_JogoId",
+                        name: "FK_Palpites_Jogos_JogoId",
                         column: x => x.JogoId,
-                        principalTable: "Jogo",
+                        principalTable: "Jogos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Palpite_Usuarios_UsuarioId",
+                        name: "FK_Palpites_Usuarios_UsuarioId",
                         column: x => x.UsuarioId,
                         principalTable: "Usuarios",
                         principalColumn: "Id",
@@ -80,13 +81,13 @@ namespace CopaDoMundo2026.Api.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Palpite_JogoId",
-                table: "Palpite",
+                name: "IX_Palpites_JogoId",
+                table: "Palpites",
                 column: "JogoId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Palpite_UsuarioId",
-                table: "Palpite",
+                name: "IX_Palpites_UsuarioId",
+                table: "Palpites",
                 column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
@@ -100,10 +101,10 @@ namespace CopaDoMundo2026.Api.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Palpite");
+                name: "Palpites");
 
             migrationBuilder.DropTable(
-                name: "Jogo");
+                name: "Jogos");
 
             migrationBuilder.DropTable(
                 name: "Usuarios");

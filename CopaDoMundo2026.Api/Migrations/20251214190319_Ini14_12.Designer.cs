@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CopaDoMundo2026.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251214144138_Ini2")]
-    partial class Ini2
+    [Migration("20251214190319_Ini14_12")]
+    partial class Ini14_12
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,7 +48,10 @@ namespace CopaDoMundo2026.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Fase")
+                    b.Property<short>("Fase")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("Grupo")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -72,7 +75,7 @@ namespace CopaDoMundo2026.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Jogo");
+                    b.ToTable("Jogos");
                 });
 
             modelBuilder.Entity("CopaDoMundo.Models.Models.Palpite", b =>
@@ -101,7 +104,7 @@ namespace CopaDoMundo2026.Api.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Palpite");
+                    b.ToTable("Palpites");
                 });
 
             modelBuilder.Entity("CopaMundo2026.Models.Usuario", b =>

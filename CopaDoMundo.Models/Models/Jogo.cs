@@ -10,9 +10,15 @@ namespace CopaDoMundo.Models.Models
     {
         public int Id { get; set; }
 
-        public DateTime DataHora { get; set; }
+        public JogoEnum.PartidaEnum Fase { get; set; }
+
+        public string Rodada { get; set; } = string.Empty;
+
+        public string Grupo { get; set; } = string.Empty;
 
         public string Estadio { get; set; } = string.Empty;
+
+        public DateTime DataHora { get; set; }
 
         public string SelecaoA { get; set; } = string.Empty;
 
@@ -21,10 +27,6 @@ namespace CopaDoMundo.Models.Models
         public string SelecaoB { get; set; } = string.Empty;
 
         public string BandeiraSelecaoB { get; set; } = string.Empty;
-
-        public string Rodada { get; set; } = string.Empty;
-
-        public string Fase { get; set; } = string.Empty; 
 
         public int? QtdGolsSelecaoA { get; set; }
 

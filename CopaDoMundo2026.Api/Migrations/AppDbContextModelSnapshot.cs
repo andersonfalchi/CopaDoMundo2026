@@ -45,7 +45,10 @@ namespace CopaDoMundo2026.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Fase")
+                    b.Property<short>("Fase")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("Grupo")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -69,7 +72,22 @@ namespace CopaDoMundo2026.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Jogo");
+                    b.ToTable("Jogos");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            BandeiraSelecaoA = "https://s.sde.globo.com/media/organizations/2019/07/15/Argentina.svg",
+                            BandeiraSelecaoB = "https://s.sde.globo.com/media/organizations/2019/09/02/Australia.svg",
+                            DataHora = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Estadio = "",
+                            Fase = (short)0,
+                            Grupo = "Grupo A",
+                            Rodada = "1ª RODADA",
+                            SelecaoA = "Argentina",
+                            SelecaoB = "Australia"
+                        });
                 });
 
             modelBuilder.Entity("CopaDoMundo.Models.Models.Palpite", b =>
@@ -98,7 +116,7 @@ namespace CopaDoMundo2026.Api.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("Palpite");
+                    b.ToTable("Palpites");
                 });
 
             modelBuilder.Entity("CopaMundo2026.Models.Usuario", b =>
