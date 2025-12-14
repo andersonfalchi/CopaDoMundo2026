@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "CopaDoMundo2026.Api": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7071",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7071;http://localhost:7071"
+      },
+      "applicationUrl": "https://localhost:7071;http://localhost:7071"
+    }
+  }
+}
