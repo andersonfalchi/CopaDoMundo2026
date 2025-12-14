@@ -26,7 +26,8 @@ public class AutenticacaoService
         {
             NomeUsuario = registro.NomeUsuario,
             SenhaHash = HashSenha(registro.Senha),
-            DataCriacao = DateTime.UtcNow
+            DataCriacao = DateTime.UtcNow,
+            UltimoAcesso = DateTime.UtcNow,
         };
 
         _db.Usuarios.Add(usuario);
