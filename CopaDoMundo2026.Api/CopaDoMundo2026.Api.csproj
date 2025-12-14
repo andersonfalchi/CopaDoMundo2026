@@ -22,8 +22,10 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.1" />
 		<PackageReference Include="supabase-csharp" Version="0.16.2" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\CopaDoMundo.Models\CopaDoMundo.Models.csproj" />

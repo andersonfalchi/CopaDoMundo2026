@@ -1,4 +1,5 @@
 ﻿using CopaDoMundo2026.Api.Middlewares;
+using CopaDoMundo2026.Api.Services;
 using CopaMundo2026.Context;
 using CopaMundo2026.Services;
 using Microsoft.Azure.Functions.Worker;
@@ -15,24 +16,34 @@ namespace CopaDoMundo2026.Api
         static void Main(string[] args)
         {
             var host = new HostBuilder()
-    .ConfigureFunctionsWebApplication(builder =>
-    {
-        builder.UseMiddleware<CorsMiddleware>();
-    })
-    .ConfigureServices(services =>
-    {
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
+                .ConfigureFunctionsWebApplication(builder =>
+                {
+                    builder.UseMiddleware<CorsMiddleware>();
+                })
+                .ConfigureServices(services =>
+                {
+                    services.AddApplicationInsightsTelemetryWorkerService();
+                    services.ConfigureFunctionsApplicationInsights();
 
-        var connectionString = Environment.GetEnvironmentVariable("DatabaseConnection");
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString));
+                    var connectionString = Environment.GetEnvironmentVariable("DatabaseConnection");
+                    services.AddDbContext<AppDbContext>(options =>
+                        options.UseNpgsql(connectionString));      
 
-        services.AddScoped<AutenticacaoService>();
-    })
-    .Build();
+                    services.AddScoped<AutenticacaoService>();
+                    services.AddScoped<PalpitesService>();
 
-            host.Run();
+                    var jwtSecret = Environment.GetEnvironmentVariable("JwtSecret")
+                        ?? throw new InvalidOperationException("JwtSecret não configurada");
+
+                    var jwtIssuer = Environment.GetEnvironmentVariable("JwtIssuer") ?? "CopaApp";
+
+                    services.AddSingleton(new JwtService(jwtSecret, jwtIssuer));
+
+
+                })
+                .Build();
+
+           host.Run();
         }
     }
 }

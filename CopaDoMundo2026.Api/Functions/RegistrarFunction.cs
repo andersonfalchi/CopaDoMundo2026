@@ -30,17 +30,27 @@ namespace CopaDoMundo2026.Api.Functions
             _logger.LogInformation("Processando requisição de registro");
 
             var registro = await req.ReadFromJsonAsync<RegistroDTO>();
+         
             if (registro == null)
             {
-                var bad = req.CreateResponse(HttpStatusCode.BadRequest);
-                await bad.WriteStringAsync("Dados inválidos");
-                return bad;
+                _logger.LogWarning("RegistroDTO nulo");
+                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequest.WriteAsJsonAsync(new
+                {
+                    sucesso = false,
+                    mensagem = "Dados inválidos"
+                });
+                return badRequest;
             }
 
             var (sucesso, mensagem) = await _auth.RegistrarAsync(registro);
 
-            var response = req.CreateResponse(sucesso ? HttpStatusCode.Created : HttpStatusCode.BadRequest);
+            _logger.LogInformation($"Resultado registro: sucesso={sucesso}, mensagem={mensagem}");
+
+            var response = req.CreateResponse(sucesso ? HttpStatusCode.Created : HttpStatusCode.BadRequest);  
+
             await response.WriteAsJsonAsync(new { sucesso, mensagem });
+
             return response;
         }
     }

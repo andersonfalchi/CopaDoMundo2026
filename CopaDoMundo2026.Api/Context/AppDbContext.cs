@@ -11,8 +11,8 @@ namespace CopaMundo2026.Context
     public class AppDbContext : DbContext
     {
         public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<Jogo> Jogo { get; set; }
-        public DbSet<Palpite> Palpite { get; set; }
+        public DbSet<Jogo> Jogos { get; set; }
+        public DbSet<Palpite> Palpites { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 

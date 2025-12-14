@@ -1,4 +1,5 @@
-﻿using CopaMundo2026.Models;
+﻿using CopaDoMundo2026.Api.Services;
+using CopaMundo2026.Models;
 using CopaMundo2026.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -15,11 +16,16 @@ namespace CopaDoMundo2026.Api.Functions
     public class LoginFunction
     {
         private readonly AutenticacaoService _auth;
+        private readonly JwtService _jwt;
         private readonly ILogger<LoginFunction> _logger;
 
-        public LoginFunction(AutenticacaoService auth, ILogger<LoginFunction> logger)
+        public LoginFunction(
+            AutenticacaoService auth,
+            JwtService jwt,
+            ILogger<LoginFunction> logger)
         {
             _auth = auth;
+            _jwt = jwt;
             _logger = logger;
         }
 
@@ -41,18 +47,27 @@ namespace CopaDoMundo2026.Api.Functions
 
             var response = req.CreateResponse(sucesso ? HttpStatusCode.OK : HttpStatusCode.BadRequest);
 
-            var usuarioSafe = usuario == null ? null : new
+            if (sucesso && usuario != null)
             {
-                Id = usuario.Id,
-                NomeUsuario = usuario.NomeUsuario,
-            };
+                var token = _jwt.GerarToken(usuario);
 
-            await response.WriteAsJsonAsync(new
+                await response.WriteAsJsonAsync(new
+                {
+                    sucesso = true,
+                    mensagem,
+                    token,
+                    usuario = new
+                    {
+                        usuario.Id,
+                        usuario.NomeUsuario,
+                        usuario.Pago
+                    }
+                });
+            }
+            else
             {
-                sucesso,
-                mensagem,
-                usuario = usuarioSafe
-            });
+                await response.WriteAsJsonAsync(new { sucesso = false, mensagem });
+            }
 
             return response;
         }
