@@ -1,5 +1,6 @@
 ﻿
 
+using CopaDoMundo.Models.Models;
 using CopaMundo2026.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace CopaMundo2026.Context
     public class AppDbContext : DbContext
     {
         public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Jogo> Jogo { get; set; }
+        public DbSet<Palpite> Palpite { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 

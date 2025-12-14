@@ -1,0 +1,252 @@
+@page "/"
+@page "/registro"
+@using CopaDoMundo2026.Services
+@using CopaMundo2026.Models
+
+@inject AuthApiClient Api
+@inject CustomAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Cadastro - Bolão da Copa</PageTitle>
+
+<div class="login-container">
+    <div class="video-side register-side">
+        <div class="register-content">
+            <div class="register-icon">🏆</div>
+            <h1 class="register-title">Entre para o Bolão!</h1>
+            <p class="register-subtitle">Crie sua conta e participe</p>
+            <div class="register-features">
+                <div class="feature-item">⚽ Palpites da Copa 2026</div>
+                <div class="feature-item">🏆 Ranking de Acertos</div>
+                <div class="feature-item">🎯 Desafie seus Amigos</div>
+                <div class="feature-item">🥇 Prêmios Incríveis</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-side">
+        <div class="form-container">
+            <div class="form-header">
+                <div class="logo-icon">🎯</div>
+                <h2 class="form-title">CRIAR CONTA</h2>
+                <p class="form-subtitle">Faça parte do melhor bolão da Copa</p>
+            </div>
+
+            <EditForm Model="@registroModel" OnValidSubmit="@RealizarRegistro" class="login-form">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(mensagemErro))
+                {
+                    <div class="alert alert-error">
+                        <span class="alert-icon">❌</span>
+                        <span>@mensagemErro</span>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(mensagemSucesso))
+                {
+                    <div class="alert alert-success">
+                        <span class="alert-icon">✅</span>
+                        <span>@mensagemSucesso</span>
+                    </div>
+                }
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="label-icon">👤</span>
+                        Nome de Usuário
+                    </label>
+                    <div class="input-wrapper">
+                        <InputText @bind-Value="registroModel.NomeUsuario"
+                                   @bind-Value:after="VerificarNomeUsuario"
+                                   class="form-input"
+                                   placeholder="Digite um nome único"
+                                   disabled="@carregando" />
+                    </div>
+                    <ValidationMessage For="@(() => registroModel.NomeUsuario)" class="validation-message" />
+                    @if (verificandoNome)
+                    {
+                        <span class="input-hint">🔄 Verificando disponibilidade...</span>
+                    }
+                    else if (!string.IsNullOrEmpty(registroModel.NomeUsuario) && nomeDisponivel)
+                    {
+                        <span class="input-hint success">✅ Nome disponível!</span>
+                    }
+                    else if (!string.IsNullOrEmpty(registroModel.NomeUsuario) && !nomeDisponivel)
+                    {
+                        <span class="input-hint error">❌ Nome já está em uso</span>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="label-icon">🔒</span>
+                        Senha
+                    </label>
+                    <div class="input-wrapper">
+                        <InputText @bind-Value="registroModel.Senha"
+                                   type="password"
+                                   class="form-input"
+                                   placeholder="Mínimo 6 caracteres"
+                                   disabled="@carregando" />
+                    </div>
+                    <ValidationMessage For="@(() => registroModel.Senha)" class="validation-message" />
+                    @if (!string.IsNullOrEmpty(registroModel.Senha))
+                    {
+                        <div class="password-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" style="width: @ObterForcaSenha()%; background-color: @ObterCorForcaSenha();"></div>
+                            </div>
+                            <span class="input-hint">Força: @ObterTextoForcaSenha()</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="label-icon">🔒</span>
+                        Confirmar Senha
+                    </label>
+                    <div class="input-wrapper">
+                        <InputText @bind-Value="registroModel.ConfirmaSenha"
+                                   type="password"
+                                   class="form-input"
+                                   placeholder="Digite novamente"
+                                   disabled="@carregando" />
+                    </div>
+                    <ValidationMessage For="@(() => registroModel.ConfirmaSenha)" class="validation-message" />
+                    @if (!string.IsNullOrEmpty(registroModel.ConfirmaSenha) && registroModel.Senha == registroModel.ConfirmaSenha)
+                    {
+                        <span class="input-hint success">✅ Senhas coincidem</span>
+                    }
+                </div>
+
+                <button type="submit" class="btn-login" disabled="@(carregando || !nomeDisponivel)">
+                    @if (carregando)
+                    {
+                        <span class="btn-spinner">⚽</span>
+                        <span>CRIANDO...</span>
+                    }
+                    else
+                    {
+                        <span>CRIAR CONTA</span>
+                        <span class="btn-arrow">→</span>
+                    }
+                </button>
+            </EditForm>
+
+            <div class="form-divider">
+                <span>já tem conta?</span>
+            </div>
+
+            <button class="btn-register" @onclick="IrParaLogin" disabled="@carregando">
+                <span>Fazer Login</span>
+            </button>
+
+            <div class="form-footer">
+                <p>⚽ Faça parte da maior torcida! ⚽</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegistroDTO registroModel = new();
+    private string mensagemErro = string.Empty;
+    private string mensagemSucesso = string.Empty;
+    private bool carregando = false;
+    private bool verificandoNome = false;
+    private bool nomeDisponivel = true;
+    private System.Threading.Timer? verificacaoTimer;
+
+    private async Task RealizarRegistro()
+    {
+        mensagemErro = string.Empty;
+        mensagemSucesso = string.Empty;
+        carregando = true;
+
+        try
+        {
+            var (sucesso, mensagem) = await Api.RegisterAsync(registroModel);
+
+            if (sucesso)
+            {
+                mensagemSucesso = mensagem;
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                mensagemErro = mensagem;
+            }
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void VerificarNomeUsuario()
+    {
+        if (string.IsNullOrWhiteSpace(registroModel.NomeUsuario))
+        {
+            nomeDisponivel = true;
+            return;
+        }
+
+        verificandoNome = true;
+        verificacaoTimer?.Dispose();
+
+        verificacaoTimer = new System.Threading.Timer(_ =>
+        {
+            InvokeAsync(() =>
+            {
+                // nomeDisponivel = AuthService.VerificarNomeUsuarioDisponivel(registroModel.NomeUsuario);
+                verificandoNome = false;
+                StateHasChanged();
+            });
+        }, null, 500, System.Threading.Timeout.Infinite);
+    }
+
+    private int ObterForcaSenha()
+    {
+        if (string.IsNullOrEmpty(registroModel.Senha)) return 0;
+
+        int forca = 0;
+        if (registroModel.Senha.Length >= 6) forca += 25;
+        if (registroModel.Senha.Length >= 8) forca += 25;
+        if (registroModel.Senha.Any(char.IsDigit)) forca += 25;
+        if (registroModel.Senha.Any(char.IsUpper)) forca += 25;
+
+        return forca;
+    }
+
+    private string ObterCorForcaSenha()
+    {
+        var forca = ObterForcaSenha();
+        if (forca <= 25) return "#ef4444";
+        if (forca <= 50) return "#f59e0b";
+        if (forca <= 75) return "#3b82f6";
+        return "#10b981";
+    }
+
+    private string ObterTextoForcaSenha()
+    {
+        var forca = ObterForcaSenha();
+        if (forca <= 25) return "Fraca ⚠️";
+        if (forca <= 50) return "Média 📊";
+        if (forca <= 75) return "Boa 👍";
+        return "Forte 💪";
+    }
+
+    private void IrParaLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        verificacaoTimer?.Dispose();
+    }
+}

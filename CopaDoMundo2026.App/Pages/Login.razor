@@ -1,0 +1,171 @@
+@page "/login"
+@using CopaDoMundo2026.Services
+@using CopaMundo2026.Models
+
+@inject AuthApiClient Api
+@inject CustomAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Login - Bolão da Copa</PageTitle>
+
+<div class="login-container @(loginSucesso ? "video-playing" : "")">
+    <div class="video-side">
+        <video @ref="videoElement" class="main-video" muted playsinline>
+            <source src="realizando-o-gol.mp4" type="video/mp4">
+        </video>
+        <div class="video-text-overlay">
+            <h1 class="main-title">Bem vindo aos Palpites</h1>
+            <p class="main-subtitle">Copa do Mundo 2026</p>
+        </div>
+    </div>
+
+    <div class="form-side">
+        <div class="form-container">
+            <div class="form-header">
+                <div class="logo-icon">🏆</div>
+                <h2 class="form-title">LOGIN DO JOGADOR</h2>
+                <p class="form-subtitle">Entre em campo com suas credenciais</p>
+            </div>
+
+            <EditForm Model="@loginModel" OnValidSubmit="@RealizarLogin" class="login-form">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(mensagemErro))
+                {
+                    <div class="alert alert-error">
+                        <span class="alert-icon">❌</span>
+                        <span>@mensagemErro</span>
+                    </div>
+                }
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="label-icon">👤</span>
+                        Usuário
+                    </label>
+                    <div class="input-wrapper">
+                        <InputText @bind-Value="loginModel.Usuario"
+                                   class="form-input"
+                                   placeholder="Digite seu usuário"
+                                   disabled="@carregando" />
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Usuario)" class="validation-message" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <span class="label-icon">🔒</span>
+                        Senha
+                    </label>
+                    <div class="input-wrapper">
+                        <InputText @bind-Value="loginModel.Senha"
+                                   type="password"
+                                   class="form-input"
+                                   placeholder="Digite sua senha"
+                                   disabled="@carregando" />
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Senha)" class="validation-message" />
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" />
+                        <span>Lembrar-me</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-login" disabled="@carregando">
+                    @if (carregando)
+                    {
+                        <span class="btn-spinner">⚽</span>
+                        <span>ENTRANDO...</span>
+                    }
+                    else
+                    {
+                        <span>ENTRAR</span>
+                        <span class="btn-arrow">→</span>
+                    }
+                </button>
+            </EditForm>
+
+            <div class="form-divider">
+                <span>ou</span>
+            </div>
+
+            <button class="btn-register" @onclick="IrParaRegistro" disabled="@carregando">
+                <span>Criar nova conta</span>
+            </button>
+
+            <div class="form-footer">
+                <p>⚽ Participe do melhor bolão da Copa! ⚽</p>
+            </div>
+        </div>
+    </div>
+
+    @if (loginSucesso)
+    {
+        <div class="success-overlay">
+            <div class="success-content">
+                <div class="success-icon">🎉</div>
+                <h2 class="success-title">GOOOOOOL!</h2>
+                <p class="success-message">Login realizado com sucesso!</p>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private LoginDTO loginModel = new();
+    private string mensagemErro = string.Empty;
+    private bool carregando = false;
+    private bool loginSucesso = false;
+    private ElementReference videoElement;
+
+    private async Task RealizarLogin()
+    {
+        mensagemErro = string.Empty;
+        carregando = true;
+
+        await Task.Delay(300);
+
+        try
+        {
+            var (sucesso, mensagem, usuario) = await Api.LoginAsync(loginModel);
+
+            await JS.InvokeVoidAsync("playVideo", videoElement);
+            StateHasChanged();
+
+            await Task.Delay(4000);
+
+            loginSucesso = true;
+            StateHasChanged();
+
+            await Task.Delay(3000);
+
+            if (!sucesso)
+            {
+                loginSucesso = false;
+                mensagemErro = mensagem;
+                StateHasChanged();
+            }
+            else 
+            { 
+                Navigation.NavigateTo("/"); 
+            }
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = "Erro ao realizar login. Tente novamente.";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+
+    private void IrParaRegistro()
+    {
+        Navigation.NavigateTo("/registro");
+    }
+}
