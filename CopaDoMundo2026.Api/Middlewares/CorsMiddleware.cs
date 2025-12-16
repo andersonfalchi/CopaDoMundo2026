@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,14 @@ namespace CopaDoMundo2026.Api.Middlewares
     {
         // ⭐ Configure origens permitidas via environment variable
         private readonly string[] _origensPermitidas;
+        private readonly ILogger<CorsMiddleware> _logger;
 
-        public CorsMiddleware()
+        public CorsMiddleware(ILoggerFactory loggerFactory)
         {
+            _logger = loggerFactory.CreateLogger<CorsMiddleware>();
+
             var origens = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS")
-                ?? "http://localhost:44396,https://localhost:44396";
+                 ?? "*";
 
             _origensPermitidas = origens.Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(o => o.Trim())
@@ -43,6 +47,8 @@ namespace CopaDoMundo2026.Api.Middlewares
             // Tratar requisição OPTIONS (preflight)
             if (requestData.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
             {
+                _logger.LogInformation($"✈️ Preflight detectado para origem: {origin}");
+
                 var preflightResponse = requestData.CreateResponse(HttpStatusCode.NoContent);
                 AddCorsHeaders(preflightResponse, origin);
 
@@ -59,25 +65,30 @@ namespace CopaDoMundo2026.Api.Middlewares
             }
         }
 
-        private void AddCorsHeaders(HttpResponseData response, string requestOrigin)
+        private void AddCorsHeaders(HttpResponseData response, string? requestOrigin)
         {
-            // ⭐ Verificar se origem é permitida
-            string allowedOrigin = "*";
+            string allowedOrigin;
 
-            if (_origensPermitidas.Length > 0 && _origensPermitidas[0] != "*")
+            // ⭐ Determinar origem permitida
+            if (_origensPermitidas.Contains("*"))
             {
-                // Se origem específica está na lista, permitir
-                if (!string.IsNullOrEmpty(requestOrigin) &&
-                    _origensPermitidas.Contains(requestOrigin, StringComparer.OrdinalIgnoreCase))
-                {
-                    allowedOrigin = requestOrigin;
-                }
-                else
-                {
-                    allowedOrigin = _origensPermitidas[0];
-                }
+                allowedOrigin = "*";
+            }
+            else if (!string.IsNullOrEmpty(requestOrigin) &&
+                     _origensPermitidas.Any(o => o.Equals(requestOrigin, StringComparison.OrdinalIgnoreCase)))
+            {
+                allowedOrigin = requestOrigin; // Origem permitida
+            }
+            else
+            {
+                // Origem não permitida, mas ainda responde para debug
+                _logger.LogWarning($"⚠️ Origem não permitida: {requestOrigin}. Permitidas: {string.Join(", ", _origensPermitidas)}");
+                allowedOrigin = _origensPermitidas[0]; // Fallback
             }
 
+            _logger.LogInformation($"🔓 CORS Origin permitida: {allowedOrigin}");
+
+            // Limpar headers existentes
             response.Headers.Remove("Access-Control-Allow-Origin");
             response.Headers.Remove("Access-Control-Allow-Credentials");
             response.Headers.Remove("Access-Control-Allow-Methods");
@@ -85,7 +96,18 @@ namespace CopaDoMundo2026.Api.Middlewares
             response.Headers.Remove("Access-Control-Expose-Headers");
             response.Headers.Remove("Access-Control-Max-Age");
 
-            response.Headers.Add("Access-Control-Allow-Origin", allowedOrigin);           
+            // Adicionar headers CORS
+            response.Headers.Add("Access-Control-Allow-Origin", allowedOrigin);
+
+            if (allowedOrigin != "*")
+            {
+                response.Headers.Add("Access-Control-Allow-Credentials", "true");
+            }
+
+            response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+            response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
+            response.Headers.Add("Access-Control-Expose-Headers", "Content-Length, Content-Type");
+            response.Headers.Add("Access-Control-Max-Age", "3600");
         }
     }
 }
