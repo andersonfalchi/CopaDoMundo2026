@@ -40,8 +40,49 @@ namespace CopaDoMundo.Models.Models
         public const string GanaBandeira = "https://s.sde.globo.com/media/organizations/2019/09/08/Gana.svg";
         public const string PortugalBandeira = "https://s.sde.globo.com/media/organizations/2019/09/17/Portugal.svg";
         public const string UruguaiBandeira = "https://s.sde.globo.com/media/organizations/2019/07/16/Uruguai.svg";
+        public const string AfricaDoSulBandeira = "https://s.sde.globo.com/media/organizations/2019/09/09/África_do_Sul.svg";
+        public const string ParaguaiBandeira = "https://s.sde.globo.com/media/organizations/2019/07/15/Paraguai.svg";
+        public const string HaitiBandeira = "https://s.sde.globo.com/media/organizations/2019/07/14/Haiti.svg";
+        public const string EscociaBandeira = "https://s.sde.globo.com/media/organizations/2019/09/15/Escócia.svg";
+        public const string CuracaoBandeira = "https://s.sde.globo.com/media/organizations/2019/07/14/Curaçao.svg";
+        public const string CostaDoMarfimBandeira = "https://s.sde.globo.com/media/organizations/2019/09/03/Costa_do_Marfim.svg";
+        public const string CaboVerdeBandeira = "https://s.sde.globo.com/media/organizations/2019/09/08/Cabo_Verde.svg";
+        public const string EgitoBandeira = "https://s.sde.globo.com/media/organizations/2019/09/08/Egito.svg";
+        public const string NovaZelandiaBandeira = "https://s.sde.globo.com/media/organizations/2019/09/01/Nova_Zelandia.svg";
+        public const string NoruegaBandeira = "https://s.sde.globo.com/media/organizations/2019/09/15/Noruega.svg";
+        public const string ArgeliaBandeira = "https://s.sde.globo.com/media/organizations/2019/09/08/Argélia.svg";
+        public const string EuropaDBandeira = "https://s.sde.globo.com/media/organizations/2025/12/03/Bandeira_UEFA_1NolDy2.svg";
+        public const string Intercontinental2Bandeira = "https://s.sde.globo.com/media/organizations/2025/12/03/Bandeira_FIFA.svg";
+        public const string AustriaBandeira = "https://s.sde.globo.com/media/organizations/2019/09/17/Áustria.svg";
+        public const string JordaniaBandeira = "https://s.sde.globo.com/media/organizations/2019/09/03/Jordania.svg";
+        public const string UzbequistaoBandeira = "https://s.sde.globo.com/media/organizations/2019/09/08/Uzbequistão.svg";
+        public const string ColombiaBandeira = "https://s.sde.globo.com/media/organizations/2019/07/14/Colombia.svg";
+        public const string PanamaBandeira = "https://s.sde.globo.com/media/organizations/2019/07/16/Panamá.svg";
+
         public const string IndefinidoBandeira = "https://s.glbimg.com/es/sde/f/organizacoes/escudo_default_65x65.png";
 
+        public const string AfricaDoSulSelecao = "África do Sul";
+        public const string AustriaSelecao = "Áustria";
+        public const string PanamaSelecao = "Panamá";
+        public const string ColombiaSelecao = "Colômbia";
+        public const string UzbequistaoSelecao = "Uzbequistão";
+        public const string JordaniaSelecao = "Jordânia";
+        public const string EuropaASelecao = "Europa A";
+        public const string EuropaBSelecao = "Europa B";
+        public const string EuropaCSelecao = "Europa C";
+        public const string EuropaDSelecao = "Europa D";
+        public const string Intercontinental1Selecao = "Intercontinental 1";
+        public const string Intercontinental2Selecao = "Intercontinental 2";
+        public const string ArgeliaSelecao = "Argélia";
+        public const string NoruegaSelecao = "Noruega";
+        public const string NovaZelandiaSelecao = "Nova Zelândia";
+        public const string EgitoSelecao = "Egito";
+        public const string CaboVerdeSelecao = "Cabo Verde";
+        public const string CostaDoMarfimSelecao = "Costa do Marfim";
+        public const string CuracaoSelecao = "Curaçao";
+        public const string EscociaSelecao = "Escócia";
+        public const string HaitiSelecao = "Haiti";
+        public const string ParaguaiSelecao = "Paraguai";
         public const string CatarSelecao = "Catar";
         public const string EquadorSelecao = "Equador";
         public const string HolandaSelecao = "Holanda";
@@ -88,5 +129,23 @@ namespace CopaDoMundo.Models.Models
         public const string GrupoJ = "Grupo J";
         public const string GrupoK = "Grupo K";
         public const string GrupoL = "Grupo L";
+
+        public const string BanorteEstadio = "Banorte Stadium, Cidade do México";
+        public const string AkronEstadio = "Estádio Akron, Zapopan";
+        public const string BMOEstadio = "BMO Field, Toronto";
+        public const string SoFiEstadio = "SoFi Stadium, Inglewood";
+        public const string LevisEstadio = "Levi's Stadium, Santa Clara";
+        public const string MetLifeEstadio = "MetLife Stadium, East Rutherford";
+        public const string GilletteEstadio = "Gillette Stadium, Foxborough";
+        public const string BCPlaceEstadio = "BC Place, Vancouver";
+        public const string NRGEstadio = "NRG Stadium, Houston";
+        public const string ATTEstadio = "AT&T Stadium, Arlington";
+        public const string LincolnEstadio = "Lincoln Financial Field, Filadélfia";
+        public const string BBVAEstadio = "Estadio BBVA Bancomer, Guadaloupe";
+        public const string MercedesEstadio = "Mercedes-Benz Stadium, Atlanta";
+        public const string LumenEstadio = "Lumen Field, Seattle";
+        public const string HardRockEstadio = "Hard Rock Stadium, Miami Gardens";
+        public const string ArrowheadEstadio = "Arrowhead Stadium, Kansas City";
+        public const string AztecaEstadio = "Estadio Azteca, Cidade do México";
     }
 }
