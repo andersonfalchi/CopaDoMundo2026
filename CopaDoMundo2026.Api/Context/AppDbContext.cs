@@ -46,6 +46,7 @@ public static class ModelBuilderExtensions
     {
         modelBuilder.Entity<Jogo>().HasData(new Jogo[]
         {
+            #region 1° Rodada
             new Jogo()
             {
                 Id = 1,
@@ -285,7 +286,7 @@ public static class ModelBuilderExtensions
                 BandeiraSelecaoB = Constantes.UruguaiBandeira,
                 QtdGolsSelecaoA = default,
                 QtdGolsSelecaoB = default
-            },           
+            },
             new Jogo()
             {
                 Id = 17,
@@ -406,6 +407,7 @@ public static class ModelBuilderExtensions
                 QtdGolsSelecaoA = default,
                 QtdGolsSelecaoB = default
             },
+            #endregion
         });
     }
 }

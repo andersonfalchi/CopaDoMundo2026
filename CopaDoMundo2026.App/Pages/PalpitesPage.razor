@@ -1,0 +1,676 @@
+﻿@page "/palpites"
+@using CopaDoMundo2026.Services
+@using CopaMundo2026.Models
+
+@inject JogosApiClient Api
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Palpites - Copa do Mundo 2026</PageTitle>
+
+<div class="container">
+    <div class="header">
+        <h1>🏆 Meus Palpites - Copa do Mundo 2026</h1>
+        <div class="user-info">
+            <span class="username">@nomeUsuario</span>
+            <button class="btn-save-all" @onclick="SalvarTodosPalpites" disabled="@isSaving">
+                @if (isSaving)
+                {
+                    <span class="spinner"></span>
+                    <span>Salvando...</span>
+                }
+                else
+                {
+                    <span>💾 Salvar Todos os Palpites</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading">
+            <div class="spinner-large"></div>
+            <p>Carregando jogos...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(mensagemErro))
+    {
+        <div class="error-state">
+            <p>❌ @mensagemErro</p>
+            <button class="btn-retry" @onclick="CarregarDados">Tentar Novamente</button>
+        </div>
+    }
+    else if (jogos == null || jogos.Count == 0)
+    {
+        <div class="empty-state">
+            <p>⚽ Nenhum jogo disponível para palpites no momento.</p>
+        </div>
+    }
+    else
+    {
+        <div class="filters">
+            <button class="filter-btn @(grupoSelecionado == "TODOS" ? "active" : "")"
+                    @onclick="FiltrarTodos">
+                Todos os Grupos
+            </button>
+            @foreach (var grupo in grupos)
+            {
+                var grupoLocal = grupo;
+                <button class="filter-btn @(grupoSelecionado == grupoLocal ? "active" : "")"
+                        @onclick="() => FiltrarPorGrupo(grupoLocal)">
+                    @grupoLocal
+                </button>
+            }
+        </div>
+
+        <div class="games-grid">
+            @foreach (var jogo in jogosFiltrados)
+            {
+                var jogoLocal = jogo;
+                var palpiteExistente = palpitesMap.ContainsKey(jogoLocal.Id) ? palpitesMap[jogoLocal.Id] : null;
+                var golsA = palpiteExistente?.QtdGolsSelecaoA ?? 0;
+                var golsB = palpiteExistente?.QtdGolsSelecaoB ?? 0;
+
+                <div class="game-card">
+                    <div class="game-header">
+                        <span class="badge-grupo">@jogoLocal.Grupo</span>
+                        <span class="badge-rodada">@jogoLocal.Rodada</span>
+                    </div>
+
+                    <div class="game-info">
+                        <div class="date-time">
+                            <span class="icon">📅</span>
+                            <span>@jogoLocal.DataHora.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                            <span class="icon">🕐</span>
+                            <span>@jogoLocal.DataHora.ToLocalTime().ToString("HH:mm")</span>
+                        </div>
+                        <div class="stadium">
+                            <span class="icon">🏟️</span>
+                            <span>@jogoLocal.Estadio</span>
+                        </div>
+                    </div>
+
+                    <div class="match-container">
+                        <div class="team">
+                            <img src="@jogoLocal.BandeiraSelecaoA" alt="@jogoLocal.SelecaoA" class="flag" />
+                            <span class="team-name">@jogoLocal.SelecaoA</span>
+                        </div>
+
+                        <div class="score-input">
+                            <input type="number"
+                                   min="0"
+                                   max="20"
+                                   class="score-field"
+                                   value="@golsA"
+                                   @onchange="@((ChangeEventArgs e) => AtualizarGolsA(jogoLocal.Id, e.Value))"
+                                   placeholder="0" />
+
+                            <span class="vs">X</span>
+
+                            <input type="number"
+                                   min="0"
+                                   max="20"
+                                   class="score-field"
+                                   value="@golsB"
+                                   @onchange="@((ChangeEventArgs e) => AtualizarGolsB(jogoLocal.Id, e.Value))"
+                                   placeholder="0" />
+                        </div>
+
+                        <div class="team">
+                            <img src="@jogoLocal.BandeiraSelecaoB" alt="@jogoLocal.SelecaoB" class="flag" />
+                            <span class="team-name">@jogoLocal.SelecaoB</span>
+                        </div>
+                    </div>
+
+                    @if (palpiteExistente != null && palpiteExistente.Id > 0)
+                    {
+                        <div class="saved-indicator">
+                            <span class="icon">✓</span>
+                            <span>Palpite salvo</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(mensagem))
+    {
+        <div class="toast @toastClass">
+            @mensagem
+        </div>
+    }
+</div>
+
+@code {
+    private List<JogoDto> jogos = new();
+    private Dictionary<int, PalpiteDto> palpitesMap = new();
+    private List<JogoDto> jogosFiltrados = new();
+    private List<string> grupos = new();
+    private string grupoSelecionado = "TODOS";
+    private string nomeUsuario = "Usuário";
+    private int usuarioId = 1; // TODO: Obter do estado de autenticação
+
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string mensagem = string.Empty;
+    private string mensagemErro = string.Empty;
+    private string toastClass = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarDados();
+    }
+
+    private void AtualizarGolsA(int jogoId, object? valor)
+    {
+        if (int.TryParse(valor?.ToString(), out int gols))
+        {
+            gols = Math.Max(0, Math.Min(20, gols));
+
+            if (palpitesMap.ContainsKey(jogoId))
+            {
+                var palpite = palpitesMap[jogoId];
+                palpitesMap[jogoId] = palpite with { QtdGolsSelecaoA = gols };
+            }
+            else
+            {
+                palpitesMap[jogoId] = new PalpiteDto(0, usuarioId, jogoId, gols, 0, null);
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private void AtualizarGolsB(int jogoId, object? valor)
+    {
+        if (int.TryParse(valor?.ToString(), out int gols))
+        {
+            gols = Math.Max(0, Math.Min(20, gols));
+
+            if (palpitesMap.ContainsKey(jogoId))
+            {
+                var palpite = palpitesMap[jogoId];
+                palpitesMap[jogoId] = palpite with { QtdGolsSelecaoB = gols };
+            }
+            else
+            {
+                palpitesMap[jogoId] = new PalpiteDto(0, usuarioId, jogoId, 0, gols, null);
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task CarregarDados()
+    {
+        isLoading = true;
+        mensagemErro = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            // Carregar jogos da primeira rodada
+            var (sucessoJogos, msgJogos, jogosData) = await Api.ObterJogosPorRodadaAsync("1ª RODADA");
+
+            if (!sucessoJogos || jogosData == null)
+            {
+                mensagemErro = msgJogos;
+                return;
+            }
+
+            jogos = jogosData;
+
+            // Carregar palpites do usuário
+            var (sucessoPalpites, msgPalpites, palpitesData) = await Api.ObterPalpitesUsuarioAsync(usuarioId);
+
+            if (sucessoPalpites && palpitesData != null)
+            {
+                palpitesMap = palpitesData.ToDictionary(p => p.JogoId, p => p);
+            }
+
+            // Extrair grupos únicos
+            grupos = jogos.Select(j => j.Grupo).Distinct().OrderBy(g => g).ToList();
+
+            // Inicializar filtro
+            FiltrarPorGrupo("TODOS");
+        }
+        catch (Exception ex)
+        {
+            mensagemErro = $"Erro inesperado: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void FiltrarPorGrupo(string grupo)
+    {
+        grupoSelecionado = grupo;
+        jogosFiltrados = grupo == "TODOS"
+            ? jogos.ToList()
+            : jogos.Where(j => j.Grupo == grupo).ToList();
+        StateHasChanged();
+    }
+
+    private void FiltrarTodos()
+    {
+        FiltrarPorGrupo("TODOS");
+    }
+
+    private async Task SalvarTodosPalpites()
+    {
+        isSaving = true;
+        mensagem = string.Empty;
+        StateHasChanged();
+
+        await Task.Delay(300);
+
+        try
+        {
+            var palpitesParaSalvar = palpitesMap.Values
+                .Where(p => p.QtdGolsSelecaoA >= 0 && p.QtdGolsSelecaoB >= 0)
+                .Select(p => new PalpiteLoteDto(p.UsuarioId, p.JogoId, p.QtdGolsSelecaoA, p.QtdGolsSelecaoB))
+                .ToList();
+
+            if (palpitesParaSalvar.Count == 0)
+            {
+                MostrarMensagem("⚠️ Nenhum palpite para salvar.", "warning");
+                return;
+            }
+
+            var (sucesso, msg, resultado) = await Api.SalvarPalpitesLoteAsync(palpitesParaSalvar);
+
+            if (sucesso && resultado != null)
+            {
+                MostrarMensagem($"✅ {resultado.Sucesso} palpite(s) salvos com sucesso!", "success");
+
+                // Recarregar palpites para atualizar IDs
+                await Task.Delay(1000);
+                var (sucessoPalpites, _, palpitesData) = await Api.ObterPalpitesUsuarioAsync(usuarioId);
+
+                if (sucessoPalpites && palpitesData != null)
+                {
+                    palpitesMap = palpitesData.ToDictionary(p => p.JogoId, p => p);
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                MostrarMensagem($"❌ {msg}", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensagem($"❌ Erro: {ex.Message}", "error");
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async void MostrarMensagem(string msg, string tipo)
+    {
+        mensagem = msg;
+        toastClass = tipo;
+        StateHasChanged();
+
+        await Task.Delay(3000);
+        mensagem = string.Empty;
+        StateHasChanged();
+    }
+}
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .header {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .username {
+        color: #4a5568;
+        font-weight: 600;
+    }
+
+    .btn-save-all {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-save-all:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-save-all:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .filters {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        background: white;
+        border: 2px solid #e2e8f0;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #4a5568;
+    }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+    .games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 20px;
+    }
+
+    .game-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+
+    .game-header {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .badge-grupo {
+        background: #667eea;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .badge-rodada {
+        background: #f7fafc;
+        color: #4a5568;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .game-info {
+        margin-bottom: 16px;
+        color: #718096;
+        font-size: 14px;
+    }
+
+    .date-time, .stadium {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+    }
+
+    .icon {
+        font-size: 16px;
+    }
+
+    .match-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 20px 0;
+    }
+
+    .team {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .flag {
+        width: 48px;
+        height: 32px;
+        object-fit: cover;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .team-name {
+        font-weight: 600;
+        color: #2d3748;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .score-input {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .score-field {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        font-weight: 700;
+        text-align: center;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        background: #f7fafc;
+        color: #2d3748;
+        transition: all 0.3s ease;
+    }
+
+        .score-field:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+    .vs {
+        font-weight: 700;
+        color: #a0aec0;
+        font-size: 18px;
+    }
+
+    .saved-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #48bb78;
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: 12px;
+        padding: 8px;
+        background: #f0fff4;
+        border-radius: 8px;
+    }
+
+    .loading, .empty-state, .error-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 16px;
+        color: #4a5568;
+    }
+
+    .btn-retry {
+        margin-top: 16px;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+    .spinner, .spinner-large {
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+    }
+
+    .spinner {
+        width: 16px;
+        height: 16px;
+    }
+
+    .spinner-large {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 16px;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        padding: 16px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: slideIn 0.3s ease;
+        z-index: 1000;
+    }
+
+        .toast.success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .toast.error {
+            background: #f56565;
+            color: white;
+        }
+
+        .toast.warning {
+            background: #ed8936;
+            color: white;
+        }
+
+    @@keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .games-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .match-container {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .score-input {
+            flex-direction: row;
+        }
+    }
+</style>
