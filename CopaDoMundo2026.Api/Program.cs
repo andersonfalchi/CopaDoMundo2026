@@ -30,7 +30,8 @@ namespace CopaDoMundo2026.Api
                         options.UseNpgsql(connectionString));      
 
                     services.AddScoped<AutenticacaoService>();
-                    services.AddScoped<PalpitesService>();
+                    services.AddScoped<PalpiteService>();
+                    services.AddScoped<JogoService>();
 
                     var jwtSecret = Environment.GetEnvironmentVariable("JwtSecret")
                         ?? throw new InvalidOperationException("JwtSecret não configurada");
